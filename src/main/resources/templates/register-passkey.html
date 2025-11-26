@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Register Passkey</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-6">
+                    <div class="card shadow">
+                        <div class="card-body p-5">
+                            <h2 class="mb-4">Register a Passkey</h2>
+                            
+                            <div id="success-message" class="alert alert-success d-none">
+                                <h5 class="alert-heading">Passkey Registered Successfully! 🎉</h5>
+                                <p>You can now use your passkey to sign in without a password.</p>
+                            </div>
+                            
+                            <div id="error-message" class="alert alert-danger d-none"></div>
+                            
+                            <div id="registration-form">
+                                <p class="text-muted mb-4">
+                                    A passkey allows you to sign in securely using biometric authentication 
+                                    (Face ID, Touch ID, or Windows Hello) or a security key.
+                                </p>
+                                
+                                <div class="mb-4">
+                                    <label for="passkeyLabel" class="form-label">Passkey Label</label>
+                                    <input type="text" class="form-control" id="passkeyLabel" 
+                                           placeholder="e.g., My MacBook, iPhone" value="My Passkey">
+                                    <small class="form-text text-muted">Give your passkey a memorable name</small>
+                                </div>
+                                
+                                <button id="registerButton" class="btn btn-primary btn-lg w-100 mb-3">
+                                    🔐 Register Passkey
+                                </button>
+                                
+                                <a href="/dashboard" th:href="@{/dashboard}" class="btn btn-outline-secondary w-100">
+                                    Cancel
+                                </a>
+                            </div>
+                            
+                            <div id="success-actions" class="d-none">
+                                <a href="/dashboard" th:href="@{/dashboard}" class="btn btn-primary w-100 mb-2">
+                                    Return to Dashboard
+                                </a>
+                                <button id="registerAnotherButton" class="btn btn-outline-secondary w-100">
+                                    Register Another Passkey
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <script>
+            const registerButton = document.getElementById('registerButton');
+            const registerAnotherButton = document.getElementById('registerAnotherButton');
+            const successMessage = document.getElementById('success-message');
+            const errorMessage = document.getElementById('error-message');
+            const registrationForm = document.getElementById('registration-form');
+            const successActions = document.getElementById('success-actions');
+            const passkeyLabel = document.getElementById('passkeyLabel');
+            
+            registerButton.addEventListener('click', registerPasskey);
+            registerAnotherButton.addEventListener('click', resetForm);
+            
+            async function registerPasskey() {
+                try {
+                    registerButton.disabled = true;
+                    registerButton.textContent = 'Registering...';
+                    errorMessage.classList.add('d-none');
+                    
+                    // Get CSRF token
+                    const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+                    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN';
+                    
+                    // Request registration options
+                    const optionsResponse = await fetch('/webauthn/register/options', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            [csrfHeader]: csrfToken
+                        }
+                    });
+                    
+                    if (!optionsResponse.ok) {
+                        throw new Error('Failed to get registration options');
+                    }
+                    
+                    const options = await optionsResponse.json();
+                    
+                    // Convert base64url to Uint8Array
+                    options.challenge = base64urlToUint8Array(options.challenge);
+                    options.user.id = base64urlToUint8Array(options.user.id);
+                    if (options.excludeCredentials) {
+                        options.excludeCredentials = options.excludeCredentials.map(cred => ({
+                            ...cred,
+                            id: base64urlToUint8Array(cred.id)
+                        }));
+                    }
+                    
+                    // Create credential
+                    const credential = await navigator.credentials.create({
+                        publicKey: options
+                    });
+                    
+                    // Prepare credential for server
+                    const credentialJSON = {
+                        publicKey: {
+                            credential: {
+                                id: credential.id,
+                                rawId: uint8ArrayToBase64url(new Uint8Array(credential.rawId)),
+                                response: {
+                                    attestationObject: uint8ArrayToBase64url(new Uint8Array(credential.response.attestationObject)),
+                                    clientDataJSON: uint8ArrayToBase64url(new Uint8Array(credential.response.clientDataJSON)),
+                                    transports: credential.response.getTransports ? credential.response.getTransports() : []
+                                },
+                                type: credential.type,
+                                clientExtensionResults: credential.getClientExtensionResults(),
+                                authenticatorAttachment: credential.authenticatorAttachment
+                            },
+                            label: passkeyLabel.value || 'My Passkey'
+                        }
+                    };
+                    
+                    // Send credential to server
+                    const registerResponse = await fetch('/webauthn/register', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            [csrfHeader]: csrfToken
+                        },
+                        body: JSON.stringify(credentialJSON)
+                    });
+                    
+                    if (registerResponse.ok) {
+                        registrationForm.classList.add('d-none');
+                        successMessage.classList.remove('d-none');
+                        successActions.classList.remove('d-none');
+                    } else {
+                        throw new Error('Registration failed');
+                    }
+                    
+                } catch (error) {
+                    console.error('Passkey registration failed:', error);
+                    errorMessage.textContent = 'Failed to register passkey: ' + error.message;
+                    errorMessage.classList.remove('d-none');
+                    registerButton.disabled = false;
+                    registerButton.textContent = '🔐 Register Passkey';
+                }
+            }
+            
+            function resetForm() {
+                registrationForm.classList.remove('d-none');
+                successMessage.classList.add('d-none');
+                successActions.classList.add('d-none');
+                errorMessage.classList.add('d-none');
+                registerButton.disabled = false;
+                registerButton.textContent = '🔐 Register Passkey';
+                passkeyLabel.value = 'My Passkey';
+            }
+            
+            function base64urlToUint8Array(base64url) {
+                const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+                const binary = atob(base64);
+                const bytes = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) {
+                    bytes[i] = binary.charCodeAt(i);
+                }
+                return bytes;
+            }
+            
+            function uint8ArrayToBase64url(uint8Array) {
+                let binary = '';
+                const len = uint8Array.byteLength;
+                for (let i = 0; i < len; i++) {
+                    binary += String.fromCharCode(uint8Array[i]);
+                }
+                return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+            }
+        </script>
+    </div>
+</body>
+</html>

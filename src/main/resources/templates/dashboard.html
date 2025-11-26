@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Dashboard</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card shadow">
+                        <div class="card-body p-5">
+                            <h1 class="mb-4">Welcome, <span th:text="${username}">User</span>! 👋</h1>
+                            
+                            <div class="alert alert-info">
+                                <h5 class="alert-heading">🔐 Authentication Method</h5>
+                                <p class="mb-0">You signed in using: <strong th:text="${authMethod}">Password</strong></p>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <h3>About Passkeys</h3>
+                                <p class="text-muted">
+                                    Passkeys provide a more secure and convenient alternative to passwords. 
+                                    They use public-key cryptography and are resistant to phishing, credential stuffing, 
+                                    and other common attack vectors.
+                                </p>
+                                
+                                <ul class="text-muted">
+                                    <li>✅ No passwords to remember</li>
+                                    <li>✅ Protected by biometric authentication</li>
+                                    <li>✅ Phishing-resistant</li>
+                                    <li>✅ Works across devices</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <h4>Your Passkeys</h4>
+                                <div th:if="${passkeyCount == 0}" class="alert alert-warning">
+                                    <p class="mb-0">You haven't registered any passkeys yet. Add one for passwordless login!</p>
+                                </div>
+                                <div th:if="${passkeyCount > 0}" class="mb-3">
+                                    <p class="text-muted">You have <strong th:text="${passkeyCount}">0</strong> passkey(s) registered:</p>
+                                    <div class="list-group">
+                                        <div th:each="passkey : ${passkeys}" class="list-group-item">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1" th:text="${passkey.label}">My Passkey</h6>
+                                                <small th:if="${passkey.backup_state}" class="badge bg-success">Synced</small>
+                                                <small th:unless="${passkey.backup_state}" class="badge bg-secondary">Device-bound</small>
+                                            </div>
+                                            <small class="text-muted">
+                                                Created: <span th:text="${#temporals.format(passkey.created, 'MMM dd, yyyy HH:mm')}">Date</span>
+                                                <span th:if="${passkey.last_used != null}">
+                                                    | Last used: <span th:text="${#temporals.format(passkey.last_used, 'MMM dd, yyyy HH:mm')}">Date</span>
+                                                </span>
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <a href="/passkey/register" th:href="@{/passkey/register}" class="btn btn-success">
+                                    <span th:if="${passkeyCount == 0}">Register Your First Passkey</span>
+                                    <span th:if="${passkeyCount > 0}">Register Another Passkey</span>
+                                </a>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <form th:action="@{/logout}" method="post">
+                                    <button type="submit" class="btn btn-outline-secondary">Sign Out</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
