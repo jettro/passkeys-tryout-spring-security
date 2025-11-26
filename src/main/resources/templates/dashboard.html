@@ -41,19 +41,35 @@
                                 </div>
                                 <div th:if="${passkeyCount > 0}" class="mb-3">
                                     <p class="text-muted">You have <strong th:text="${passkeyCount}">0</strong> passkey(s) registered:</p>
-                                    <div class="list-group">
-                                        <div th:each="passkey : ${passkeys}" class="list-group-item">
-                                            <div class="d-flex w-100 justify-content-between">
-                                                <h6 class="mb-1" th:text="${passkey.label}">My Passkey</h6>
-                                                <small th:if="${passkey.backup_state}" class="badge bg-success">Synced</small>
-                                                <small th:unless="${passkey.backup_state}" class="badge bg-secondary">Device-bound</small>
+                                    <div id="error-message" class="alert alert-danger d-none"></div>
+                                    <div id="success-message" class="alert alert-success d-none"></div>
+                                    <div class="list-group" id="passkey-list">
+                                        <div th:each="passkey : ${passkeys}" class="list-group-item" th:attr="data-credential-id=${passkey.credential_id}">
+                                            <div class="d-flex w-100 justify-content-between align-items-start">
+                                                <div class="flex-grow-1">
+                                                    <h6 class="mb-1" th:text="${passkey.label}">My Passkey</h6>
+                                                    <small class="text-muted d-block">
+                                                        Created: <span th:text="${#temporals.format(passkey.created, 'MMM dd, yyyy HH:mm')}">Date</span>
+                                                    </small>
+                                                    <small class="text-muted d-block">
+                                                        <span th:if="${passkey.last_used != null}">
+                                                            Last used: <span th:text="${#temporals.format(passkey.last_used, 'MMM dd, yyyy HH:mm')}">Date</span>
+                                                        </span>
+                                                        <span th:unless="${passkey.last_used != null}" class="text-warning">
+                                                            Never used
+                                                        </span>
+                                                    </small>
+                                                </div>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <small th:if="${passkey.backup_state}" class="badge bg-success">Synced</small>
+                                                    <small th:unless="${passkey.backup_state}" class="badge bg-secondary">Device-bound</small>
+                                                    <button class="btn btn-sm btn-outline-danger delete-passkey-btn" 
+                                                            th:attr="data-credential-id=${passkey.credential_id}, data-label=${passkey.label}"
+                                                            type="button">
+                                                        🗑️ Remove
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <small class="text-muted">
-                                                Created: <span th:text="${#temporals.format(passkey.created, 'MMM dd, yyyy HH:mm')}">Date</span>
-                                                <span th:if="${passkey.last_used != null}">
-                                                    | Last used: <span th:text="${#temporals.format(passkey.last_used, 'MMM dd, yyyy HH:mm')}">Date</span>
-                                                </span>
-                                            </small>
                                         </div>
                                     </div>
                                 </div>
@@ -74,5 +90,70 @@
             </div>
         </div>
     </div>
+    
+    <script layout:fragment="scripts">
+        document.addEventListener('DOMContentLoaded', function() {
+            const deleteButtons = document.querySelectorAll('.delete-passkey-btn');
+            const errorMessage = document.getElementById('error-message');
+            const successMessage = document.getElementById('success-message');
+            
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', async function() {
+                    const credentialId = this.getAttribute('data-credential-id');
+                    const label = this.getAttribute('data-label');
+                    
+                    if (!confirm(`Are you sure you want to remove the passkey "${label}"?`)) {
+                        return;
+                    }
+                    
+                    try {
+                        button.disabled = true;
+                        button.textContent = 'Removing...';
+                        errorMessage.classList.add('d-none');
+                        successMessage.classList.add('d-none');
+                        
+                        // Get CSRF token
+                        const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+                        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN';
+                        
+                        const response = await fetch(`/passkey/${encodeURIComponent(credentialId)}`, {
+                            method: 'DELETE',
+                            headers: {
+                                [csrfHeader]: csrfToken
+                            }
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (response.ok) {
+                            // Remove the passkey item from the DOM
+                            const listItem = button.closest('.list-group-item');
+                            listItem.remove();
+                            
+                            // Show success message
+                            successMessage.textContent = `Passkey "${label}" has been removed successfully.`;
+                            successMessage.classList.remove('d-none');
+                            
+                            // Update count
+                            const remainingPasskeys = document.querySelectorAll('.list-group-item').length;
+                            if (remainingPasskeys === 0) {
+                                // Reload page to show empty state
+                                setTimeout(() => window.location.reload(), 1500);
+                            }
+                        } else {
+                            throw new Error(data.error || 'Failed to delete passkey');
+                        }
+                        
+                    } catch (error) {
+                        console.error('Error deleting passkey:', error);
+                        errorMessage.textContent = 'Failed to remove passkey: ' + error.message;
+                        errorMessage.classList.remove('d-none');
+                        button.disabled = false;
+                        button.innerHTML = '🗑️ Remove';
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>

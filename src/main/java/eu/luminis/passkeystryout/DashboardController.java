@@ -57,7 +57,7 @@ public class DashboardController {
                 String userEntityId = (String) userEntities.get(0).get("id");
                 
                 // Get registered passkeys
-                String credentialsQuery = "SELECT label, created, last_used, authenticator_transports, backup_state " +
+                String credentialsQuery = "SELECT credential_id, label, created, last_used, signature_count, authenticator_transports, backup_state " +
                                         "FROM user_credentials WHERE user_entity_user_id = ? ORDER BY created DESC";
                 List<Map<String, Object>> credentials = jdbcOperations.queryForList(credentialsQuery, userEntityId);
                 

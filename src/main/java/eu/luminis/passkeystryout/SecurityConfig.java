@@ -30,7 +30,7 @@ public class SecurityConfig {
                         .requestMatchers("/webauthn/authenticate/options").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/webauthn/**").authenticated()
-                        .requestMatchers("/passkey/register").authenticated()
+                        .requestMatchers("/passkey/**").authenticated()
                         .anyRequest().authenticated()
                 )
             .formLogin(form -> form
