@@ -108,13 +108,14 @@
                             authenticatorData: uint8ArrayToBase64url(new Uint8Array(credential.response.authenticatorData)),
                             clientDataJSON: uint8ArrayToBase64url(new Uint8Array(credential.response.clientDataJSON)),
                             signature: uint8ArrayToBase64url(new Uint8Array(credential.response.signature)),
-                            userHandle: credential.response.userHandle ? uint8ArrayToBase64url(new Uint8Array(credential.response.userHandle)) : ''
+                            userHandle: credential.response.userHandle ? uint8ArrayToBase64url(new Uint8Array(credential.response.userHandle)) : null
                         },
-                        clientExtensionResults: credential.getClientExtensionResults(),
-                        authenticatorAttachment: credential.authenticatorAttachment
+                        type: credential.type,
+                        clientExtensionResults: {}
                     };
                     
-                    console.log('Sending authentication credential:', JSON.stringify(credentialJSON, null, 2));
+                    // Log for debugging
+                    console.log('Sending authentication credential:', credentialJSON);
                     
                     // Send credential to server
                     const loginResponse = await fetch('/login/webauthn', {
@@ -129,7 +130,9 @@
                     if (loginResponse.ok) {
                         window.location.href = '/dashboard';
                     } else {
-                        alert('Authentication failed');
+                        const errorText = await loginResponse.text();
+                        console.error('Authentication failed:', errorText);
+                        alert('Authentication failed. Check console for details.');
                     }
                     
                 } catch (error) {
