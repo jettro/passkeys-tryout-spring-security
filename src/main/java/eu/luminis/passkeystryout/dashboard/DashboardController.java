@@ -1,9 +1,8 @@
-package eu.luminis.passkeystryout;
+package eu.luminis.passkeystryout.dashboard;
 
-import eu.luminis.passkeystryout.entity.User;
-import eu.luminis.passkeystryout.repository.CredentialRepository;
-import eu.luminis.passkeystryout.repository.UserRepository;
-import org.springframework.jdbc.core.JdbcOperations;
+import eu.luminis.passkeystryout.user.User;
+import eu.luminis.passkeystryout.passkey.CredentialRepository;
+import eu.luminis.passkeystryout.user.UserRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.webauthn.api.PublicKeyCredentialUserEntity;
@@ -11,7 +10,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 

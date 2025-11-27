@@ -1,6 +1,5 @@
-package eu.luminis.passkeystryout.repository;
+package eu.luminis.passkeystryout.user;
 
-import eu.luminis.passkeystryout.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,4 +1,4 @@
-package eu.luminis.passkeystryout.repository;
+package eu.luminis.passkeystryout.passkey;
 
 import org.springframework.security.web.webauthn.api.Bytes;
 import org.springframework.security.web.webauthn.api.CredentialRecord;

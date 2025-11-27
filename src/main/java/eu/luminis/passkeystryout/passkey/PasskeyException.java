@@ -1,4 +1,4 @@
-package eu.luminis.passkeystryout.repository;
+package eu.luminis.passkeystryout.passkey;
 
 public class PasskeyException extends RuntimeException {
     public PasskeyException(String message) {

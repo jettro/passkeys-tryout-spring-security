@@ -1,8 +1,6 @@
-package eu.luminis.passkeystryout.entity;
+package eu.luminis.passkeystryout.user;
 
 import jakarta.persistence.*;
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "users")

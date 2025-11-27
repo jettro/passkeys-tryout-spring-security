@@ -1,7 +1,5 @@
-package eu.luminis.passkeystryout;
+package eu.luminis.passkeystryout.passkey;
 
-import eu.luminis.passkeystryout.repository.CredentialRepository;
-import eu.luminis.passkeystryout.repository.PasskeyException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.webauthn.api.PublicKeyCredentialUserEntity;

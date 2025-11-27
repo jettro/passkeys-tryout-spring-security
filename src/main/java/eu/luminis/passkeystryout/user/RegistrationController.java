@@ -1,7 +1,5 @@
-package eu.luminis.passkeystryout;
+package eu.luminis.passkeystryout.user;
 
-import eu.luminis.passkeystryout.entity.User;
-import eu.luminis.passkeystryout.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
