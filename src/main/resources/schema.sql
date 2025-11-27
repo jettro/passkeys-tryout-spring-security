@@ -33,22 +33,3 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255) NOT NULL,
     enabled BOOLEAN NOT NULL DEFAULT TRUE
 );
-
--- Passkey Credentials Linking Table (optional - for our custom tracking)
-CREATE TABLE IF NOT EXISTS passkey_credentials (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    credential_id VARCHAR(1024) NOT NULL UNIQUE,
-    user_id BIGINT NOT NULL,
-    public_key TEXT NOT NULL,
-    sign_count BIGINT NOT NULL,
-    label VARCHAR(512) NOT NULL,
-    created TIMESTAMP NOT NULL,
-    last_used TIMESTAMP NOT NULL,
-    transports VARCHAR(1024),
-    backup_eligible BOOLEAN NOT NULL,
-    backup_state BOOLEAN NOT NULL,
-    attestation_object VARCHAR(512),
-    client_data_json VARCHAR(512),
-    authenticator_attachment VARCHAR(255),
-    FOREIGN KEY (user_id) REFERENCES users(id)
-);

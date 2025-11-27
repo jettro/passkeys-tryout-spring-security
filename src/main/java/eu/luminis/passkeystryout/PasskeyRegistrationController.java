@@ -1,6 +1,8 @@
 package eu.luminis.passkeystryout;
 
 import eu.luminis.passkeystryout.entity.User;
+import eu.luminis.passkeystryout.repository.CredentialRepository;
+import eu.luminis.passkeystryout.repository.PasskeyException;
 import eu.luminis.passkeystryout.repository.UserRepository;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.security.core.Authentication;
@@ -21,11 +23,11 @@ import java.util.Map;
 public class PasskeyRegistrationController {
     
     private final UserRepository userRepository;
-    private final JdbcOperations jdbcOperations;
-    
-    public PasskeyRegistrationController(UserRepository userRepository, JdbcOperations jdbcOperations) {
+    private final CredentialRepository credentialRepository;
+
+    public PasskeyRegistrationController(UserRepository userRepository, CredentialRepository credentialRepository) {
         this.userRepository = userRepository;
-        this.jdbcOperations = jdbcOperations;
+        this.credentialRepository = credentialRepository;
     }
     
     @GetMapping("/passkey/register")
@@ -35,46 +37,17 @@ public class PasskeyRegistrationController {
     
     @DeleteMapping("/passkey/{credentialId}")
     @ResponseBody
-    @Transactional
     public ResponseEntity<Map<String, String>> deletePasskey(
             @PathVariable String credentialId,
             Authentication authentication) {
         
         try {
-            // Get username from authentication
             String username = getUsername(authentication);
-            
-            // Verify user owns this passkey
-            User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-            
-            // Get user entity
-            String userEntityQuery = "SELECT id FROM user_entities WHERE name = ?";
-            List<Map<String, Object>> userEntities = jdbcOperations.queryForList(userEntityQuery, username);
-            
-            if (userEntities.isEmpty()) {
-                return ResponseEntity.badRequest()
-                    .body(Map.of("error", "User entity not found"));
-            }
-            
-            String userEntityId = (String) userEntities.get(0).get("id");
-            
-            // Verify credential belongs to user
-            String verifyQuery = "SELECT id FROM user_credentials WHERE credential_id = ? AND user_entity_user_id = ?";
-            List<Map<String, Object>> credentials = jdbcOperations.queryForList(verifyQuery, credentialId, userEntityId);
-            
-            if (credentials.isEmpty()) {
-                return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Credential not found or does not belong to user"));
-            }
-            
-            // Delete from Spring Security's user_credentials table
-            String deleteCredentialQuery = "DELETE FROM user_credentials WHERE credential_id = ?";
-            jdbcOperations.update(deleteCredentialQuery, credentialId);
-            
+
+            credentialRepository.deletePasskeyFromUser(credentialId, username);
+
             return ResponseEntity.ok(Map.of("message", "Passkey deleted successfully"));
-            
-        } catch (Exception e) {
+        } catch (PasskeyException e) {
             return ResponseEntity.internalServerError()
                 .body(Map.of("error", "Failed to delete passkey: " + e.getMessage()));
         }

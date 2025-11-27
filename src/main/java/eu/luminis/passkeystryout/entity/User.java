@@ -20,10 +20,7 @@ public class User {
     
     @Column(nullable = false)
     private String password;
-    
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<PasskeyCredential> credentials = new HashSet<>();
-    
+
     @Column(nullable = false)
     private boolean enabled = true;
     
@@ -67,15 +64,7 @@ public class User {
     public void setPassword(String password) {
         this.password = password;
     }
-    
-    public Set<PasskeyCredential> getCredentials() {
-        return credentials;
-    }
-    
-    public void setCredentials(Set<PasskeyCredential> credentials) {
-        this.credentials = credentials;
-    }
-    
+
     public boolean isEnabled() {
         return enabled;
     }

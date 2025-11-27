@@ -1,6 +1,7 @@
 package eu.luminis.passkeystryout;
 
 import eu.luminis.passkeystryout.entity.User;
+import eu.luminis.passkeystryout.repository.CredentialRepository;
 import eu.luminis.passkeystryout.repository.UserRepository;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.security.core.Authentication;
@@ -16,15 +17,15 @@ import java.util.Map;
 
 @Controller
 public class DashboardController {
-    
+
     private final UserRepository userRepository;
-    private final JdbcOperations jdbcOperations;
-    
-    public DashboardController(UserRepository userRepository, JdbcOperations jdbcOperations) {
+    private final CredentialRepository credentialRepository;
+
+    public DashboardController(UserRepository userRepository, CredentialRepository credentialRepository) {
         this.userRepository = userRepository;
-        this.jdbcOperations = jdbcOperations;
+        this.credentialRepository = credentialRepository;
     }
-    
+
     @GetMapping("/dashboard")
     public String dashboard(Authentication authentication, Model model) {
         // Determine principal and username for both password and passkey logins
@@ -45,40 +46,19 @@ public class DashboardController {
 
         model.addAttribute("username", username);
         model.addAttribute("authMethod", isPasskeyAuth ? "Passkey" : "Password");
-        
+
         // Get user info
         User user = userRepository.findByUsername(username).orElse(null);
         if (user != null) {
-            // Get WebAuthn user entity
-            String userEntityQuery = "SELECT id, name, display_name FROM user_entities WHERE name = ?";
-            List<Map<String, Object>> userEntities = jdbcOperations.queryForList(userEntityQuery, username);
-            
-            if (!userEntities.isEmpty()) {
-                String userEntityId = (String) userEntities.get(0).get("id");
-                
-                // Get registered passkeys
-                String credentialsQuery = "SELECT credential_id, label, created, last_used, signature_count, authenticator_transports, backup_state " +
-                                        "FROM user_credentials WHERE user_entity_user_id = ? ORDER BY created DESC";
-                List<Map<String, Object>> credentials = jdbcOperations.queryForList(credentialsQuery, userEntityId);
-                
-                // Convert SQL Timestamps to Instant for Thymeleaf
-                credentials.forEach(cred -> {
-                    if (cred.get("created") instanceof java.sql.Timestamp) {
-                        cred.put("created", ((java.sql.Timestamp) cred.get("created")).toInstant());
-                    }
-                    if (cred.get("last_used") instanceof java.sql.Timestamp) {
-                        cred.put("last_used", ((java.sql.Timestamp) cred.get("last_used")).toInstant());
-                    }
-                });
-                
-                model.addAttribute("passkeys", credentials);
-                model.addAttribute("passkeyCount", credentials.size());
-            } else {
-                model.addAttribute("passkeys", List.of());
-                model.addAttribute("passkeyCount", 0);
-            }
+            List<Map<String, Object>> credentials = credentialRepository.findPasskeysInfoByUsername(username);
+            model.addAttribute("passkeys", credentials);
+            model.addAttribute("passkeyCount", credentials.size());
+        } else {
+            model.addAttribute("passkeys", List.of());
+            model.addAttribute("passkeyCount", 0);
         }
-        
+
+
         return "dashboard";
     }
 }
