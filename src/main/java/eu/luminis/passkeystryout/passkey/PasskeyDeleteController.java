@@ -1,5 +1,6 @@
 package eu.luminis.passkeystryout.passkey;
 
+import org.jspecify.annotations.NullMarked;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.webauthn.api.PublicKeyCredentialUserEntity;
@@ -12,20 +13,21 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.Map;
 
+/**
+ * Controller to handle deletion of passkeys. You can only delete passkeys for the currently authenticated user.
+ * Storing of passkeys is handled by the webauthn endpoint from Spring Security,
+ * so this controller only needs to delete the passkey from the database.
+ */
 @Controller
-public class PasskeyRegistrationController {
-    
+@NullMarked
+public class PasskeyDeleteController {
+
     private final CredentialRepository credentialRepository;
 
-    public PasskeyRegistrationController(CredentialRepository credentialRepository) {
+    public PasskeyDeleteController(CredentialRepository credentialRepository) {
         this.credentialRepository = credentialRepository;
     }
-    
-    @GetMapping("/passkey/register")
-    public String passkeyRegistrationPage() {
-        return "register-passkey";
-    }
-    
+
     @DeleteMapping("/passkey/{credentialId}")
     @ResponseBody
     public ResponseEntity<Map<String, String>> deletePasskey(
@@ -42,10 +44,10 @@ public class PasskeyRegistrationController {
                 .body(Map.of("error", "Failed to delete passkey: " + e.getMessage()));
         }
     }
-    
+
     private String getUsername(Authentication authentication) {
         Object principal = authentication.getPrincipal();
-        
+
         if (principal instanceof UserDetails userDetails) {
             return userDetails.getUsername();
         } else if (principal instanceof PublicKeyCredentialUserEntity userEntity) {

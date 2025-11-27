@@ -17,12 +17,7 @@ public class RegistrationController {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
-    
-    @GetMapping("/register")
-    public String registerPage() {
-        return "register";
-    }
-    
+
     @PostMapping("/register")
     public String register(@RequestParam String username, 
                           @RequestParam String displayName,

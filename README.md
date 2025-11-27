@@ -50,8 +50,10 @@ The application will start on `http://localhost:8080`
 1. Navigate to http://localhost:8080
 2. Click "Register" to create a new user account with username/password
 3. Log in with your credentials
-4. Navigate to "Register Passkey" to add a passkey to your account
-5. Log out and try logging in with your passkey!
+4. From the dashboard, click "Register Passkey" to add a passkey
+5. View your registered passkeys on the dashboard (shows creation date, last used, sync status)
+6. Log out and try logging in with your passkey!
+7. Test the delete functionality by removing a passkey from the dashboard
 
 ## Project Structure
 
@@ -103,12 +105,13 @@ This application implements two independent authentication mechanisms:
 
 ### Database Schema
 
-The application uses four main tables:
+The application uses three main tables:
 
 - **`users`**: Application user accounts (username, password, display name)
-- **`passkey_credentials`**: Custom passkey tracking with metadata
 - **`user_entities`**: Spring Security WebAuthn user entities
-- **`user_credentials`**: Spring Security WebAuthn credential storage
+- **`user_credentials`**: Spring Security WebAuthn credential storage with metadata (label, last used, signature count, etc.)
+
+*Note: The `passkey_credentials` table exists in the schema but is not actively used - Spring Security's `user_credentials` table handles all passkey data.*
 
 ## Configuration
 
@@ -133,6 +136,17 @@ The application is configured for local development:
 ```
 
 For production deployment, update these values in `SecurityConfig.java`.
+
+### Passkey Management
+
+The dashboard displays all registered passkeys with:
+- Passkey label/name
+- Creation date
+- Last used timestamp
+- Sync status (Synced for iCloud Keychain / Device-bound for hardware keys)
+- Delete functionality to remove unwanted passkeys
+
+**Note on Signature Count**: Platform authenticators (Touch ID, Face ID, Windows Hello) typically report a signature count of 0. Only some hardware security keys (like YubiKey) provide an incrementing signature counter.
 
 ### Debug Logging
 

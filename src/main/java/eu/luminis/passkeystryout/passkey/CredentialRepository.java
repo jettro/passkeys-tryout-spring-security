@@ -22,6 +22,12 @@ public class CredentialRepository {
         this.userCredentialRepository = userCredentialRepository;
     }
 
+    /**
+     * Find information about all passkeys (credentials) for a given username.
+     *
+     * @param username String containing the username of the user
+     * @return List of maps with passkey information, or empty list if user has no passkeys
+     */
     public List<Map<String, Object>> findPasskeysInfoByUsername(String username) {
         PublicKeyCredentialUserEntity userEntity = userEntityRepository.findByUsername(username);
         if (userEntity == null) {
@@ -45,6 +51,13 @@ public class CredentialRepository {
         }).toList();
     }
 
+    /**
+     * Delete a passkey (credential) for a given user.
+     *
+     * @param credentialId String containing the credential ID in Base64 format
+     * @param username String containing the username of the user
+     * @throws PasskeyException if the user or credential is not found or does not belong to the user
+     */
     public void deletePasskeyFromUser(String credentialId, String username) {
         PublicKeyCredentialUserEntity userEntity = userEntityRepository.findByUsername(username);
         if (userEntity == null) {
