@@ -9,6 +9,8 @@ A demonstration Spring Boot application showcasing modern WebAuthn/Passkey authe
 - 💾 **Persistent Storage**: H2 database with separate tables for traditional users and WebAuthn credentials
 - 🎨 **Clean UI**: Bootstrap-based responsive interface with Thymeleaf templates
 - 🔍 **Debug Support**: Built-in logging filter for WebAuthn request/response debugging
+- 🗑️ **Passkey Management**: View and delete registered passkeys from the dashboard
+- 🔧 **YubiKey Support**: Compatible with hardware security keys like YubiKey
 - 🚀 **Hot Reload**: Spring Boot DevTools for rapid development
 
 ## Technology Stack
@@ -60,21 +62,18 @@ src/
 │   │   ├── PasskeysTryoutApplication.java       # Main application class
 │   │   ├── SecurityConfig.java                   # Security & WebAuthn configuration
 │   │   ├── WebAuthnConfig.java                   # WebAuthn repository beans
-│   │   ├── WebAuthnLoggingFilter.java           # Request/response logging for debugging
-│   │   ├── controller/
-│   │   │   ├── HomeController.java
-│   │   │   ├── LoginController.java
-│   │   │   ├── RegistrationController.java
-│   │   │   ├── PasskeyRegistrationController.java
-│   │   │   └── DashboardController.java
-│   │   ├── entity/
-│   │   │   ├── User.java                        # Application user entity
-│   │   │   └── PasskeyCredential.java           # Passkey tracking entity
-│   │   ├── repository/
-│   │   │   ├── UserRepository.java
-│   │   │   └── PasskeyCredentialRepository.java
-│   │   └── service/
-│   │       └── PasskeyUserDetailsService.java   # UserDetails implementation
+│   │   ├── WebMvcConfig.java                     # View controllers for simple pages
+│   │   ├── dashboard/
+│   │   │   └── DashboardController.java          # User dashboard with passkey list
+│   │   ├── passkey/
+│   │   │   ├── PasskeyRegistrationController.java # Passkey registration & deletion
+│   │   │   ├── CredentialRepository.java         # Custom credential queries
+│   │   │   └── PasskeyException.java             # Passkey-specific exceptions
+│   │   └── user/
+│   │       ├── User.java                        # Application user entity
+│   │       ├── UserRepository.java              # User JPA repository
+│   │       ├── CustomUserDetailsService.java    # UserDetails implementation
+│   │       └── RegistrationController.java      # User registration
 │   └── resources/
 │       ├── application.properties                # Application configuration
 │       ├── schema.sql                            # Database schema
