@@ -28,6 +28,11 @@ public class PasskeyDeleteController {
         this.credentialRepository = credentialRepository;
     }
 
+    @GetMapping("/passkey/register")
+    public String register() {
+        return "register-passkey";
+    }
+
     @DeleteMapping("/passkey/{credentialId}")
     @ResponseBody
     public ResponseEntity<Map<String, String>> deletePasskey(
