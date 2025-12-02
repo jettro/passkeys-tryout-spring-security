@@ -34,11 +34,11 @@ public class SecurityConfig {
                         .requestMatchers("/passkey/**").authenticated()
                         .anyRequest().authenticated()
                 )
-            .formLogin(form -> form
-                .loginPage("/login")
-                .defaultSuccessUrl("/dashboard", true)
-                .permitAll()
-            )
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .defaultSuccessUrl("/dashboard", true)
+                        .permitAll()
+                )
                 .logout(logout -> logout
                         .logoutSuccessUrl("/")
                         .permitAll()
